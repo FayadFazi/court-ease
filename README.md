@@ -1,6 +1,6 @@
 # 🏆 Court-Ease – Court Booking System
 
-![Court-Ease Screenshot](A_README.md_document_image_displays_a_2D_digital_v.png)
+![Court-Ease Screenshot](https://raw.githubusercontent.com/FayadFazi/court-ease/refs/heads/main/asset/image/read-me-image.png)
 
 ---
 
