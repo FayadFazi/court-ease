@@ -1,0 +1,52 @@
+{% extends "admin_tw_base.html" %}
+{% block title %}Admin · Bookings{% endblock %}
+{% block content %}
+<h2 class="text-xl font-semibold mb-4">Manage bookings</h2>
+
+<form class="grid md:grid-cols-6 gap-3 mb-4" method="GET" action="{{ url_for('admin_bp.admin_manage_bookings') }}">
+  <input type="text" name="q" value="{{ q or '' }}" placeholder="User or email" class="md:col-span-2 px-3 py-2 rounded bg-slate-800 border border-slate-700 w-full">
+  <select name="court_id" class="px-3 py-2 rounded bg-slate-800 border border-slate-700">
+    <option value="">All courts</option>
+    {% for c in courts %}<option value="{{ c.id }}" {% if court_id and court_id|string == c.id|string %}selected{% endif %}>{{ c.court_name }}</option>{% endfor %}
+  </select>
+  <input type="date" name="from" value="{{ date_from or '' }}" class="px-3 py-2 rounded bg-slate-800 border border-slate-700">
+  <input type="date" name="to" value="{{ date_to or '' }}" class="px-3 py-2 rounded bg-slate-800 border border-slate-700">
+  <select name="per_page" class="px-3 py-2 rounded bg-slate-800 border border-slate-700">
+    {% for p in [10,20,50,100] %}<option value="{{ p }}" {% if per_page==p %}selected{% endif %}>{{ p }}</option>{% endfor %}
+  </select>
+  <div class="flex gap-2">
+    <button class="px-3 py-2 rounded bg-brand text-white">Filter</button>
+    <a class="px-3 py-2 rounded border border-slate-700 hover:bg-slate-800" href="{{ url_for('admin_bp.export_bookings_csv', q=q, court_id=court_id, from=date_from, to=date_to) }}">Export CSV</a>
+  </div>
+</form>
+
+<div class="overflow-hidden rounded-xl border border-slate-700">
+  <table class="w-full text-sm">
+    <thead class="bg-slate-800/70 text-slate-300">
+      <tr><th class="text-left p-3">ID</th><th class="text-left p-3">User</th><th class="text-left p-3">Court</th><th class="text-left p-3">Date</th><th class="text-left p-3">Start</th><th class="text-left p-3">End</th><th class="text-left p-3">Actions</th></tr>
+    </thead>
+    <tbody class="divide-y divide-slate-700">
+      {% for b in bookings %}
+      <tr class="hover:bg-slate-800/40">
+        <td class="p-3">{{ b.id }}</td><td class="p-3">{{ b.username }}</td><td class="p-3">{{ b.court_name }}</td><td class="p-3">{{ b.booking_date }}</td><td class="p-3">{{ b.start_time }}</td><td class="p-3">{{ b.end_time }}</td>
+        <td class="p-3">
+          <a href="{{ url_for('admin_bp.admin_edit_booking', booking_id=b.id) }}" class="px-2 py-1 rounded bg-sky-600 hover:bg-sky-500 text-white">Edit</a>
+          <form action="{{ url_for('admin_bp.admin_delete_booking', booking_id=b.id) }}" method="POST" class="inline">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="px-2 py-1 rounded bg-rose-600 hover:bg-rose-500 text-white" data-confirm="Delete this booking?">Delete</button>
+          </form>
+        </td>
+      </tr>
+      {% else %}
+      <tr><td class="p-4 text-slate-400" colspan="7">No bookings found.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<nav class="mt-4 flex items-center gap-2">
+  <a class="px-3 py-1.5 rounded border border-slate-700 hover:bg-slate-800 {{ 'pointer-events-none opacity-50' if page<=1 }}" href="{{ url_for('admin_bp.admin_manage_bookings', q=q, court_id=court_id, from=date_from, to=date_to, per_page=per_page, page=page-1) }}">Prev</a>
+  <span class="text-slate-300">Page {{ page }} / {{ pages }}</span>
+  <a class="px-3 py-1.5 rounded border border-slate-700 hover:bg-slate-800 {{ 'pointer-events-none opacity-50' if page>=pages }}" href="{{ url_for('admin_bp.admin_manage_bookings', q=q, court_id=court_id, from=date_from, to=date_to, per_page=per_page, page=page+1) }}">Next</a>
+</nav>
+{% endblock %}

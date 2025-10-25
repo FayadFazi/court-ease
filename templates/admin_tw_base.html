@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>{% block title %}Admin · CourtEase{% endblock %}</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = { darkMode: 'class', theme: { extend: { colors: { brand: '#6366f1' }}}}
+  </script>
+  <style>html,body{height:100%}</style>
+</head>
+<body class="bg-slate-900 text-slate-100">
+  <div class="tw-overlay fixed inset-0 bg-black/40 hidden z-30"></div>
+
+  <div class="min-h-screen flex">
+   
+    <aside class="tw-sidebar w-64 bg-slate-800 border-r border-slate-700 fixed inset-y-0 left-0 z-40 transform -translate-x-full lg:translate-x-0 transition-transform">
+      <div class="px-4 py-4 flex items-center gap-2 border-b border-slate-700">
+        <img src="{{ url_for('static', filename='tennis-court.png') }}" class="h-7" alt="">
+        <div class="font-semibold">CourtEase Admin</div>
+      </div>
+      <nav class="p-3 space-y-1">
+        <a href="{{ url_for('admin_bp.dashboard') }}" class="block px-3 py-2 rounded hover:bg-slate-700/60 {{ 'bg-slate-700' if request.endpoint=='admin_bp.dashboard' else '' }}">Dashboard</a>
+        <a href="{{ url_for('admin_bp.admin_manage_bookings') }}" class="block px-3 py-2 rounded hover:bg-slate-700/60 {{ 'bg-slate-700' if request.endpoint and request.endpoint.startswith('admin_bp.admin_manage_bookings') else '' }}">Bookings</a>
+        <a href="{{ url_for('admin_bp.admin_manage_users') }}" class="block px-3 py-2 rounded hover:bg-slate-700/60 {{ 'bg-slate-700' if request.endpoint and request.endpoint.startswith('admin_bp.admin_manage_users') else '' }}">Users</a>
+        <a href="{{ url_for('admin_bp.manage_courts') }}" class="block px-3 py-2 rounded hover:bg-slate-700/60 {{ 'bg-slate-700' if request.endpoint and request.endpoint.startswith('admin_bp.manage_courts') else '' }}">Courts</a>
+        <a href="{{ url_for('admin_bp.upcoming') }}" class="block px-3 py-2 rounded hover:bg-slate-700/60 {{ 'bg-slate-700' if request.endpoint=='admin_bp.upcoming' else '' }}">Upcoming</a>
+      </nav>
+    </aside>
+
+   
+    <div class="flex-1 lg:ml-64">
+      <header class="sticky top-0 z-20 bg-slate-800/70 backdrop-blur border-b border-slate-700">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+          <button class="lg:hidden px-3 py-2 rounded border border-slate-700 hover:bg-slate-700/60" data-tw-sidebar>☰</button>
+          <div class="text-sm text-slate-300">Admin panel</div>
+          <div class="flex items-center gap-3">
+            <span class="text-slate-300 text-sm hidden sm:inline">Hi, {{ session.get('username') }}</span>
+            <form action="{{ url_for('auth.logout') }}" method="POST" class="inline">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button class="px-3 py-1.5 rounded bg-rose-600 hover:bg-rose-500 text-white text-sm">Logout</button>
+            </form>
+          </div>
+        </div>
+      </header>
+
+      <main class="max-w-7xl mx-auto px-4 py-6">
+       
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            <div class="space-y-2 mb-4">
+              {% for category, message in messages %}
+                <div class="px-3 py-2 rounded border
+                  {% if category in ['danger','error'] %}bg-rose-900/40 border-rose-600 text-rose-200
+                  {% elif category == 'warning' %}bg-amber-900/40 border-amber-600 text-amber-200
+                  {% elif category == 'success' %}bg-emerald-900/40 border-emerald-600 text-emerald-200
+                  {% else %}bg-slate-800 border-slate-600 text-slate-200{% endif %}">
+                  {{ message }}
+                </div>
+              {% endfor %}
+            </div>
+          {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+      </main>
+    </div>
+  </div>
+
+  <script src="{{ url_for('static', filename='js/admin-tw.js') }}"></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

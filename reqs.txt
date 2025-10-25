@@ -1,0 +1,6 @@
+Flask==3.0.3
+Flask-WTF==1.2.1
+flask-limiter==3.8.0
+mysql-connector-python==9.0.0
+passlib==1.7.4
+python-dotenv==1.0.1

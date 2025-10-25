@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin Login · CourtEase</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { min-height: 100vh; }
+    .bg-grad {
+      background:
+        radial-gradient(1200px 600px at 10% 10%, rgba(99,102,241,.25), transparent 60%),
+        radial-gradient(800px 400px at 90% 10%, rgba(34,197,94,.20), transparent 60%),
+        linear-gradient(180deg, #0b1220 0%, #0b1220 100%);
+    }
+    .glass {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      box-shadow: 0 20px 60px rgba(0,0,0,.35), inset 0 0 0 1px rgba(255,255,255,.05);
+      backdrop-filter: blur(14px) saturate(140%);
+      -webkit-backdrop-filter: blur(14px) saturate(140%);
+    }
+    .neon {
+      box-shadow:
+        0 0 0 1px rgba(99,102,241,.25) inset,
+        0 12px 30px rgba(99,102,241,.22),
+        0 4px 14px rgba(99,102,241,.18);
+    }
+  </style>
+</head>
+<body class="bg-grad text-slate-100 relative overflow-hidden grid place-items-center px-4">
+
+  
+  <div class="pointer-events-none absolute -top-28 -left-24 w-[520px] h-[520px] bg-violet-600 rounded-full blur-[140px] opacity-25"></div>
+  <div class="pointer-events-none absolute -bottom-28 -right-24 w-[520px] h-[520px] bg-emerald-500 rounded-full blur-[140px] opacity-20"></div>
+
+  
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div class="fixed top-5 right-5 w-[360px] space-y-2 z-50">
+        {% for category, message in messages %}
+          <div class="px-3 py-2 rounded border shadow
+            {% if category in ['danger','error'] %}bg-rose-900/40 border-rose-600 text-rose-100
+            {% elif category == 'warning' %}bg-amber-900/40 border-amber-600 text-amber-100
+            {% elif category == 'success' %}bg-emerald-900/40 border-emerald-600 text-emerald-100
+            {% else %}bg-slate-900/60 border-slate-600 text-slate-100{% endif %}">
+            {{ message }}
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+
+  
+  <div class="glass rounded-3xl w-full max-w-5xl overflow-hidden">
+    <div class="grid md:grid-cols-2">
+      <div class="p-8 md:p-10 flex flex-col justify-center">
+        <div class="flex items-center gap-3 mb-6">
+          <img src="{{ url_for('static', filename='tennis-court.png') }}" class="h-12 w-12" alt="CourtEase logo">
+          <span class="text-2xl md:text-3xl font-extrabold tracking-wide">CourtEase</span>
+        </div>
+
+        <h2 class="text-4xl md:text-5xl font-black leading-tight">
+          <span class="text-white">Admin</span>
+          <span class="text-brand">Panel</span>
+        </h2>
+
+        <div class="mt-6 h-px w-24 bg-white/30"></div>
+
+        <p class="mt-6 text-xs text-slate-400">
+          © CourtEase — Authorized personnel only
+        </p>
+      </div>
+
+      
+      <div class="p-8 md:p-10 bg-slate-900/20 md:border-l md:border-white/10">
+        <h3 class="text-2xl font-semibold mb-6">Sign in</h3>
+
+        <form method="POST" action="{{ url_for('admin_bp.login') }}" class="space-y-4">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+          <div>
+            <label class="block text-sm mb-1">Username or Email</label>
+            <input type="text" name="username"
+                   class="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 placeholder-slate-300/70
+                          focus:outline-none focus:ring-2 focus:ring-brand/80 focus:border-transparent text-slate-50"
+                   placeholder="admin@example.com" required autofocus>
+          </div>
+
+          <div>
+            <label class="block text-sm mb-1">Password</label>
+            <div class="relative">
+              <input id="pwd" type="password" name="password"
+                     class="w-full px-4 py-3 pr-12 rounded-xl bg-white/10 border border-white/20 placeholder-slate-300/70
+                            focus:outline-none focus:ring-2 focus:ring-brand/80 focus:border-transparent text-slate-50"
+                     placeholder="••••••••" required>
+              <button type="button"
+                      class="absolute inset-y-0 right-2 my-auto text-slate-300/80 hover:text-slate-100 text-xs px-2"
+                      onclick="const p=document.getElementById('pwd'); p.type = p.type==='password'?'text':'password'; this.textContent=(p.type==='password'?'Show':'Hide');">
+                Show
+              </button>
+            </div>
+          </div>
+
+          <button class="w-full py-3 rounded-xl bg-brand hover:opacity-95 font-semibold neon">
+            Sign in
+          </button>
+
+          <div class="pt-2 text-xs text-slate-400 text-center">
+            Protected area — authorized personnel only
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>

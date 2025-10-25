@@ -1,0 +1,48 @@
+{% extends "admin_tw_base.html" %}
+{% block title %}Admin · Create booking{% endblock %}
+{% block content %}
+<h2 class="text-xl font-semibold mb-4">Create booking</h2>
+
+<form method="POST" action="{{ url_for('admin_bp.create_booking') }}" class="space-y-4 max-w-xl">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+  <div>
+    <label class="block text-sm mb-1">User</label>
+    <select name="user_id" class="w-full px-3 py-2 rounded bg-slate-800 border border-slate-700" required>
+      {% for u in users %}
+        <option value="{{ u.id }}">{{ u.username }} ({{ u.email }})</option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <div>
+    <label class="block text-sm mb-1">Court</label>
+    <select name="court_id" class="w-full px-3 py-2 rounded bg-slate-800 border border-slate-700" required>
+      {% for c in courts %}
+        <option value="{{ c.id }}">{{ c.court_name }}</option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <div>
+    <label class="block text-sm mb-1">Date</label>
+    <input type="date" name="date" class="w-full px-3 py-2 rounded bg-slate-800 border border-slate-700" required>
+  </div>
+
+  <div class="grid grid-cols-2 gap-3">
+    <div>
+      <label class="block text-sm mb-1">Start time</label>
+      <input type="time" name="start_time" class="w-full px-3 py-2 rounded bg-slate-800 border border-slate-700" required>
+    </div>
+    <div>
+      <label class="block text-sm mb-1">End time</label>
+      <input type="time" name="end_time" class="w-full px-3 py-2 rounded bg-slate-800 border border-slate-700" required>
+    </div>
+  </div>
+
+  <div class="flex gap-2">
+    <button class="px-4 py-2 rounded bg-brand text-white">Create</button>
+    <a href="{{ url_for('admin_bp.upcoming') }}" class="px-4 py-2 rounded border border-slate-700 hover:bg-slate-800">Cancel</a>
+  </div>
+</form>
+{% endblock %}

@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+{% extends "admin_tw_base.html" %}
+{% block title %}Admin · Courts{% endblock %}
+{% block content %}
+<div class="flex items-center justify-between mb-4">
+  <h2 class="text-xl font-semibold">Manage courts</h2>
+  <a href="{{ url_for('admin_bp.edit_court', court_id=0) }}" class="px-3 py-2 rounded bg-brand text-white">+ Add court</a>
+</div>
+
+<div class="overflow-hidden rounded-xl border border-slate-700">
+  <table class="w-full text-sm">
+    <thead class="bg-slate-800/70 text-slate-300">
+      <tr><th class="text-left p-3">ID</th><th class="text-left p-3">Name</th><th class="text-left p-3">Status</th><th class="text-left p-3">Actions</th></tr>
+    </thead>
+    <tbody class="divide-y divide-slate-700">
+      {% for c in courts %}
+      <tr class="hover:bg-slate-800/40">
+        <td class="p-3">{{ c.id }}</td><td class="p-3">{{ c.court_name }}</td>
+        <td class="p-3"><span class="px-2 py-0.5 rounded text-xs {{ 'bg-emerald-600' if c.status=='Available' else 'bg-slate-600' }}">{{ c.status }}</span></td>
+        <td class="p-3">
+          <a href="{{ url_for('admin_bp.edit_court', court_id=c.id) }}" class="px-2 py-1 rounded bg-sky-600 hover:bg-sky-500 text-white">Edit</a>
+          <form action="{{ url_for('admin_bp.delete_court', court_id=c.id) }}" method="POST" class="inline">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="px-2 py-1 rounded bg-rose-600 hover:bg-rose-500 text-white" data-confirm="Delete this court?">Delete</button>
+          </form>
+        </td>
+      </tr>
+      {% else %}
+      <tr><td class="p-4 text-slate-400" colspan="4">No courts.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}
+</html>

@@ -1,0 +1,67 @@
+{% extends "admin_tw_base.html" %}
+{% block title %}Admin · Upcoming{% endblock %}
+{% block content %}
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+  <div class="rounded-xl border border-slate-700 bg-slate-800 p-4">
+    <h2 class="text-lg font-semibold mb-3">Upcoming bookings</h2>
+    <div class="divide-y divide-slate-700">
+      {% for it in items %}
+      <div class="py-4 flex items-start justify-between gap-4">
+        <div class="flex items-start gap-3">
+          <div class="w-10 h-10 rounded-full bg-indigo-600 flex items-center justify-center text-white font-semibold">
+            {{ (it.username[:1] or 'U')|upper }}
+          </div>
+          <div>
+            <div class="font-semibold">{{ it.username }}</div>
+            <div class="text-sm text-slate-300">{{ it.date_str }}</div>
+            <div class="text-sm text-slate-300">{{ it.court_name }}</div>
+          </div>
+        </div>
+        <div class="relative">
+          <button type="button" class="p-2 rounded hover:bg-slate-700/60" data-menu-toggle>⋯</button>
+          <div class="hidden absolute right-0 mt-2 w-40 rounded-md border border-slate-700 bg-slate-800 shadow-lg z-20" data-menu>
+            <a href="{{ url_for('admin_bp.admin_edit_booking', booking_id=it.id) }}" class="block px-3 py-2 text-sm hover:bg-slate-700/50">Edit</a>
+            <form action="{{ url_for('admin_bp.admin_delete_booking', booking_id=it.id) }}" method="POST">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit" class="w-full text-left px-3 py-2 text-sm hover:bg-slate-700/50" data-confirm="Cancel this booking?">Cancel</button>
+            </form>
+          </div>
+        </div>
+      </div>
+      {% else %}
+      <div class="py-10 text-slate-300">No upcoming bookings.</div>
+      {% endfor %}
+    </div>
+  </div>
+
+ 
+  <div class="rounded-xl border border-slate-700 bg-slate-800 p-4">
+    <div class="flex items-center justify-between mb-2">
+      <div class="text-lg font-semibold">{{ month_name }} {{ year }}</div>
+      <div class="flex items-center gap-2">
+        <a href="{{ url_for('admin_bp.upcoming', year=prev_year, month=prev_month) }}" class="px-2 py-1 rounded border border-slate-700 hover:bg-slate-700">‹</a>
+        <a href="{{ url_for('admin_bp.upcoming', year=today_year, month=today_month) }}" class="px-2 py-1 rounded border border-slate-700 hover:bg-slate-700">Today</a>
+        <a href="{{ url_for('admin_bp.upcoming', year=next_year, month=next_month) }}" class="px-2 py-1 rounded border border-slate-700 hover:bg-slate-700">›</a>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-7 text-xs font-medium text-center text-slate-300 mb-1">
+      <div>M</div><div>T</div><div>W</div><div>T</div><div>F</div><div>S</div><div>S</div>
+    </div>
+
+    <div class="rounded-lg border border-slate-700 overflow-auto max-h-72">
+      <div class="grid grid-cols-7 gap-px bg-slate-700">
+        {% for week in weeks %}
+          {% for d in week %}
+          <div class="bg-slate-800 p-2 {% if not d.in_month %}opacity-50{% endif %}" {% if d.is_today %}data-today="1"{% endif %}>
+            <div class="text-xs {% if d.is_today %}text-brand font-semibold{% else %}text-slate-200{% endif %}">{{ d.day }}</div>
+          </div>
+          {% endfor %}
+        {% endfor %}
+      </div>
+    </div>
+
+    <a href="{{ url_for('admin_bp.create_booking') }}" class="mt-4 w-full inline-flex items-center justify-center rounded-lg bg-brand px-4 py-2 text-white shadow hover:opacity-95">Add event</a>
+  </div>
+</div>
+{% endblock %}

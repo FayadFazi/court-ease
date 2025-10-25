@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>CourtEase - Tournament Calendar</title>
+
+  
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = { corePlugins: { preflight: false } }
+  </script>
+
+  <style>
+    .calendar-skin {
+      --cal-surface: #1f2937;   
+      --cal-grid:    #0f172a;   
+      --cal-border:  #334155;   
+      --cal-text:    #e5e7eb;
+      --cal-muted:   #94a3b8;
+      --cal-accent:  #7c3aed;   
+      --cal-ring:    #6366f1;   
+    }
+    
+    .calendar-skin .cal-card   { background: #111827; border: 1px solid var(--cal-border); border-radius: 12px; }
+    .calendar-skin .cal-toolbar{ background: var(--cal-surface); border: 1px solid var(--cal-border); border-radius: 10px; color: var(--cal-text); }
+    .calendar-skin .cal-header { background: #1b2433; color: var(--cal-text); }
+    .calendar-skin .cal-gap    { background: var(--cal-border); }
+    .calendar-skin .cal-cell   { background: var(--cal-grid); color: var(--cal-text); }
+    .calendar-skin .cal-muted  { color: var(--cal-muted); }
+    .calendar-skin .cal-line   { border-top: 1px solid var(--cal-border); }
+    .calendar-skin .cal-bd     { border-color: var(--cal-border) !important; }
+
+    .calendar-skin .btn-ghost {
+      display:inline-flex; align-items:center; gap:.5rem;
+      padding:.45rem .9rem; border-radius:.6rem;
+      border:1px solid var(--cal-border);
+      color: var(--cal-text); background: #0f172a;
+      text-decoration: none; transition:.15s ease;
+    }
+    .calendar-skin .btn-ghost:hover { background:#172033; border-color:#42536a; color:#fff; }
+    .calendar-skin .btn-primary {
+      display:inline-flex; align-items:center; gap:.5rem;
+      padding:.45rem .9rem; border-radius:.6rem;
+      background: var(--cal-accent); color:#fff;
+      border:1px solid rgba(255,255,255,.08);
+      text-decoration: none; box-shadow: 0 8px 18px rgba(124,58,237,.35);
+    }
+    .calendar-skin .btn-primary:hover { filter: brightness(1.05); }
+
+    .calendar-skin .pill {
+      display: inline-flex; align-items: center; gap: .4rem;
+      padding: .18rem .5rem; border-radius: .375rem;
+      font-size: 11px; line-height: 1rem; color: rgba(255,255,255,.92);
+      box-shadow: 0 1px 0 rgba(255,255,255,.06) inset, 0 6px 14px rgba(0,0,0,.18);
+    }
+
+  
+    .calendar-skin .today-ring { display:inline-block; width:10px; height:10px; border-radius:9999px; box-shadow: inset 0 0 0 2px var(--cal-ring); }
+
+    .calendar-skin .now-line { position:absolute; left:0; right:0; border-top:2px solid #ef4444; z-index:20; pointer-events:none; }
+
+    .nav-link-btn { padding: .5rem 1rem !important; color: inherit !important; }
+    .nav-link-btn.text-warning { color:#ffc107 !important; }
+    .nav-link-btn.text-warning:hover { color:#ffca2c !important; }
+    
+  </style>
+</head>
+
+<body class="bg-light">
+
+  <div class="toast-container position-fixed top-0 end-0 p-3">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="toast text-bg-{{ category }} border-0" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="2000">
+            <div class="d-flex">
+              <div class="toast-body">{{ message }}</div>
+              <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+  </div>
+
+<nav class="navbar navbar-dark bg-primary">
+  <div class="container-fluid">
+    <a class="navbar-brand fw-bold d-flex align-items-center" href="{{ url_for('calendar.tournament_calendar') }}">
+      <img src="{{ url_for('static', filename='tennis-court.png') }}" style="height:30px;" class="me-2" alt="">
+      CourtEase 🏟️
+    </a>
+
+    <ul class="navbar-nav flex-row mx-auto align-items-center" style="gap: 1rem;">
+      <li class="nav-item">
+        <a class="nav-link px-3 {% if view=='month' %}active{% endif %}"
+           href="{{ url_for('calendar.tournament_calendar', view='month', year=year, month=month) }}">
+          Tournament Calendar
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link px-3" href="{{ url_for('booking.manage_bookings') }}">Your Bookings</a>
+      </li>
+      <li class="nav-item">
+        <form action="{{ url_for('auth.logout') }}" method="POST" class="d-inline m-0 p-0">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" class="btn btn-link nav-link px-3 text-warning m-0 p-0" style="line-height: 1.5;">
+            Logout
+          </button>
+        </form>
+      </li>
+    </ul>
+  </div>
+</nav>
+
+  <div class="container my-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h4 class="mb-0">Welcome {{ name }}</h4>
+      <div class="text-muted">You are logged in as <strong>{{ username }}</strong></div>
+    </div>
+    <div class="d-flex justify-content-between align-items-center mb-2">
+      <h5 class="mb-0">All Bookings</h5>
+      <span class="text-muted">Today: {{ today|default('') }}</span>
+    </div>
+  </div>
+
+  <div class="container-fluid px-3">
+    <div class="calendar-skin">
+      <div class="cal-card p-2 mx-auto" style="width:100%; max-width:1600px;">
+        <div class="cal-toolbar tw flex items-center justify-between px-3 py-2 mb-2">
+          <div class="flex items-center gap-2">
+            <a class="btn-ghost" href="{{ url_for('calendar.tournament_calendar', view=view, d=nav_prev_d) }}">‹</a>
+            <a class="btn-ghost" href="{{ url_for('calendar.tournament_calendar', view=view, d=today) }}">Today</a>
+            <a class="btn-ghost" href="{{ url_for('calendar.tournament_calendar', view=view, d=nav_next_d) }}">›</a>
+          </div>
+          <div class="flex items-center gap-2">
+            <div class="dropdown">
+              <button class="btn-ghost dropdown-toggle" data-bs-toggle="dropdown" type="button">
+                {{ view|capitalize }} view
+              </button>
+              <ul class="dropdown-menu dropdown-menu-end">
+                <li><a class="dropdown-item" href="{{ url_for('calendar.tournament_calendar', view='month', year=year, month=month) }}">Month view</a></li>
+                <li><a class="dropdown-item" href="{{ url_for('calendar.tournament_calendar', view='week', d=focus) }}">Week view</a></li>
+                <li><a class="dropdown-item" href="{{ url_for('calendar.tournament_calendar', view='day', d=focus) }}">Day view</a></li>
+                <li><a class="dropdown-item" href="{{ url_for('calendar.tournament_calendar', view='year', year=year) }}">Year view</a></li>
+              </ul>
+            </div>
+            <a class="btn-primary" href="{{ url_for('booking.book') }}">Add event</a>
+          </div>
+        </div>
+
+      
+        <div class="tw flex items-center justify-between px-1 py-2" style="color: var(--cal-text);">
+          {% if view == 'month' %}
+            <h6 class="fw-semibold mb-0">{{ month_name }} {{ year }}</h6>
+          {% elif view == 'week' %}
+            <h6 class="fw-semibold mb-0">{{ week_title }}</h6>
+          {% elif view == 'day' %}
+            <h6 class="fw-semibold mb-0">{{ day_title }}</h6>
+          {% elif view == 'year' %}
+            <h6 class="fw-semibold mb-0">{{ year }}</h6>
+          {% endif %}
+        </div>
+
+        {% if view == 'month' %}
+        <div class="tw rounded-lg border cal-bd overflow-hidden">
+          <div class="tw grid grid-cols-7 text-center text-xs font-medium cal-header">
+            <div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div><div>Sun</div>
+          </div>
+          <div class="tw grid grid-cols-7 gap-px cal-gap">
+            {% for d in days %}
+              <div class="tw p-2 min-h-[88px] relative cal-cell {% if not d.month_in_view %}opacity-60{% endif %} hover:bg-slate-700/40 transition-colors">
+                <div class="tw flex items-center justify-between">
+                  <span class="tw text-xs {% if d.is_today %}text-indigo-400 font-semibold{% else %}cal-muted{% endif %}">{{ d.day }}</span>
+                  {% if d.is_today %}<span class="today-ring"></span>{% endif %}
+                </div>
+                <div class="tw mt-1 space-y-1">
+                  {% set total = d.bookings|length %}
+                  {% for b in d.bookings[:3] %}
+                    {% set pill = 'bg-gradient-to-r from-indigo-500/80 to-indigo-600/80' %}
+                    {% if b.court_name == 'Court A' %}{% set pill = 'bg-gradient-to-r from-emerald-500/80 to-emerald-600/80' %}
+                    {% elif b.court_name == 'Court B' %}{% set pill = 'bg-gradient-to-r from-sky-500/80 to-sky-600/80' %}
+                    {% elif b.court_name == 'Court C' %}{% set pill = 'bg-gradient-to-r from-amber-500/80 to-amber-600/80' %}
+                    {% elif b.court_name == 'Court D' %}{% set pill = 'bg-gradient-to-r from-fuchsia-500/80 to-fuchsia-600/80' %}
+                    {% endif %}
+                    <div class="pill {{ pill }}"><span class="tw inline-block h-1.5 w-1.5 rounded-full bg-white/90"></span><span class="tw truncate">{{ b.court_name }}</span></div>
+                  {% endfor %}
+                  {% if total > 3 %}
+                    <div class="tw text-[11px] cal-muted">+{{ total - 3 }} more</div>
+                  {% endif %}
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %}
+
+      
+        {% if view == 'week' %}
+        <div class="tw grid grid-cols-[60px,1fr] gap-2">
+          <div class="tw text-xs cal-muted">
+            {% for lbl in week_hour_labels %}
+              <div class="tw h-12 cal-line pr-2 text-right">{{ lbl }}</div>
+            {% endfor %}
+          </div>
+          <div class="tw rounded-lg border cal-bd overflow-hidden">
+            <div class="tw grid grid-cols-7 text-center text-xs font-medium cal-header">
+              {% for lbl in week_day_labels %}<div>{{ lbl }}</div>{% endfor %}
+            </div>
+            <div class="tw relative cal-cell">
+              <div class="tw grid grid-cols-7">
+                {% for _ in rows_iter %}
+                  <div class="tw col-span-7 cal-line h-[22px]"></div>
+                {% endfor %}
+              </div>
+              {% for e in week_events %}
+                <div class="cb-event tw absolute rounded-md text-[12px] p-2 text-white border border-white/10 shadow-sm"
+                     data-left="{{ e.left }}" data-top="{{ e.top }}" data-height="{{ e.height }}" data-bg="{{ e.bg }}"
+                     style="width: calc(100% / 7 - 4px);">
+                  <div class="tw opacity-80">{{ e.time_label }}</div>
+                  <div class="tw font-semibold">{{ e.title }}</div>
+                </div>
+              {% endfor %}
+              <div id="now-line-week" class="now-line" hidden></div>
+            </div>
+          </div>
+        </div>
+        {% endif %}
+
+      
+        {% if view == 'day' %}
+        <div class="tw grid lg:grid-cols-[1fr,280px] gap-4">
+          <div class="tw grid grid-cols-[60px,1fr] gap-2">
+            <div class="tw text-xs cal-muted">
+              {% for lbl in day_hour_labels %}
+                <div class="tw h-12 cal-line pr-2 text-right">{{ lbl }}</div>
+              {% endfor %}
+            </div>
+            <div class="tw relative rounded-lg border cal-bd overflow-hidden">
+              <div class="tw relative cal-cell">
+                <div class="tw grid">
+                  {% for _ in rows_iter %}
+                    <div class="cal-line h-[22px]"></div>
+                  {% endfor %}
+                </div>
+                {% for e in day_events %}
+                  <div class="cb-event tw absolute rounded-md text-[12px] p-2 text-white border border-white/10 shadow-sm"
+                       data-top="{{ e.top }}" data-height="{{ e.height }}" data-bg="{{ e.bg }}"
+                       style="left: 2px; right: 2px;">
+                    <div class="tw opacity-80">{{ e.time_label }}</div>
+                    <div class="tw font-semibold">{{ e.title }}</div>
+                  </div>
+                {% endfor %}
+                <div id="now-line-day" class="now-line" hidden></div>
+              </div>
+            </div>
+          </div>
+
+        
+          <div class="tw rounded-lg p-3 cal-cell border cal-bd">
+            <div class="tw text-center font-semibold mb-2" style="color: var(--cal-text);">{{ month_name }} {{ year }}</div>
+            <div class="tw grid grid-cols-7 text-xs text-center mb-1 cal-muted">
+              <div>M</div><div>T</div><div>W</div><div>T</div><div>F</div><div>S</div><div>S</div>
+            </div>
+            <div class="tw grid grid-cols-7 gap-px cal-gap rounded">
+              {% for d in mini_days %}
+                <a class="tw block px-2 py-1 text-center text-xs cal-cell
+                          {% if not d.in_month %}opacity-50{% endif %}
+                          {% if d.is_selected %}ring-2 ring-indigo-400 rounded-sm text-slate-100 font-semibold{% else %}cal-muted{% endif %}"
+                   href="{{ url_for('calendar.tournament_calendar', view='day', d=d.date_iso) }}">
+                  {{ d.day }}
+                </a>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+        {% endif %}
+
+        
+        {% if view == 'year' %}
+        <div class="tw grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {% for m in year_months %}
+            <div class="tw rounded-lg p-3 cal-cell border cal-bd">
+              <div class="tw font-semibold mb-2" style="color: var(--cal-text);">{{ m.name }}</div>
+              <div class="tw grid grid-cols-7 text-center text-[11px] mb-1 cal-muted">
+                <div>M</div><div>T</div><div>W</div><div>T</div><div>F</div><div>S</div><div>S</div>
+              </div>
+              <div class="tw grid grid-cols-7 gap-px cal-gap rounded">
+                {% for d in m.days %}
+                  <a class="tw block px-2 py-1 text-center text-xs cal-cell
+                            {% if not d.in_month %}opacity-50{% endif %}
+                            {% if d.has %}text-indigo-400 font-semibold{% else %}cal-text{% endif %}"
+                     href="{{ url_for('calendar.tournament_calendar', view='day', d=d.date_iso) }}">
+                    {{ d.day }}
+                  </a>
+                {% endfor %}
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+        {% endif %}
+
+       
+        <div class="tw mt-3 flex flex-wrap items-center gap-4 text-xs cal-muted">
+          <span class="tw inline-flex items-center gap-2"><span class="tw inline-block h-2 w-2 rounded-full bg-emerald-500"></span> Court A</span>
+          <span class="tw inline-flex items-center gap-2"><span class="tw inline-block h-2 w-2 rounded-full bg-sky-500"></span> Court B</span>
+          <span class="tw inline-flex items-center gap-2"><span class="tw inline-block h-2 w-2 rounded-full bg-amber-500"></span> Court C</span>
+          <span class="tw inline-flex items-center gap-2"><span class="tw inline-block h-2 w-2 rounded-full bg-fuchsia-500"></span> Court D</span>
+          <span class="tw inline-flex items-center gap-2"><span class="tw inline-block h-2 w-2 rounded-full bg-indigo-500"></span> Other</span>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="d-flex justify-content-end">
+      <small class="text-muted mt-2">Auto-refresh enabled.</small>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+  <script>
+    const ROW_PX = 22, START_H = 6;
+    function positionEvents() {
+      document.querySelectorAll('.cb-event').forEach(el => {
+        const left = el.getAttribute('data-left');
+        const top = el.getAttribute('data-top');
+        const height = el.getAttribute('data-height');
+        const bg = el.getAttribute('data-bg');
+        if (left) el.style.left = left;
+        if (top) el.style.top = top;
+        if (height) el.style.height = height;
+        if (bg) { el.style.backgroundColor = bg; el.style.opacity = '0.95'; }
+      });
+    }
+    function drawNowLine(id) {
+      const line = document.getElementById(id);
+      if (!line) return;
+      const now = new Date();
+      const mins = now.getHours() * 60 + now.getMinutes();
+      const gridStart = START_H * 60;
+      const delta = mins - gridStart;
+      if (delta < 0 || delta > (22 - START_H) * 60) { line.hidden = true; return; }
+      const topPx = Math.floor((delta / 30) * ROW_PX);
+      line.style.top = topPx + 'px';
+      line.hidden = false;
+      line.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    }
+    function updateNowLines(){ drawNowLine('now-line-week'); drawNowLine('now-line-day'); }
+
+    document.addEventListener('DOMContentLoaded', function(){
+      document.querySelectorAll('.toast').forEach(el => new bootstrap.Toast(el).show());
+      positionEvents();
+      updateNowLines();
+      setInterval(updateNowLines, 60 * 1000);
+    });
+
+    setInterval(() => { window.location.reload(); }, 15000);
+  </script>
+</body>
+</html>

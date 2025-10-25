@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+{% extends "admin_tw_base.html" %}
+{% block title %}Admin · Edit court{% endblock %}
+{% block content %}
+<h2 class="text-xl font-semibold mb-4">{% if court %}Edit court{% else %}Add court{% endif %}</h2>
+<form method="POST" action="{{ url_for('admin_bp.edit_court', court_id=court.id if court else 0) }}" class="space-y-4 max-w-xl">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <div><label class="block text-sm mb-1">Name</label><input name="name" value="{{ court.court_name if court else '' }}" class="w-full px-3 py-2 rounded bg-slate-800 border border-slate-700" required></div>
+  <div><label class="block text-sm mb-1">Status</label>
+    <select name="status" class="w-full px-3 py-2 rounded bg-slate-800 border border-slate-700">
+      <option value="Available" {% if court and court.status=='Available' %}selected{% endif %}>Available</option>
+      <option value="Unavailable" {% if court and court.status=='Unavailable' %}selected{% endif %}>Unavailable</option>
+    </select>
+  </div>
+  <div class="flex gap-2">
+    <button class="px-4 py-2 rounded bg-brand text-white">Save</button>
+    <a href="{{ url_for('admin_bp.manage_courts') }}" class="px-4 py-2 rounded border border-slate-700 hover:bg-slate-800">Cancel</a>
+  </div>
+</form>
+{% endblock %}
+</html>

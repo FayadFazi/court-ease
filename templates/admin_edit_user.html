@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+{% extends "admin_tw_base.html" %}
+{% block title %}Admin · Edit user{% endblock %}
+{% block content %}
+<h2 class="text-xl font-semibold mb-4">Edit user</h2>
+<form method="POST" action="{{ url_for('admin_bp.admin_edit_user', user_id=user.id) }}" class="space-y-4 max-w-xl">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <div><label class="block text-sm mb-1">Name</label><input name="name" value="{{ user.name }}" class="w-full px-3 py-2 rounded bg-slate-800 border border-slate-700"></div>
+  <div><label class="block text-sm mb-1">Username</label><input name="username" value="{{ user.username }}" class="w-full px-3 py-2 rounded bg-slate-800 border border-slate-700"></div>
+  <div><label class="block text-sm mb-1">Email</label><input type="email" name="email" value="{{ user.email }}" class="w-full px-3 py-2 rounded bg-slate-800 border border-slate-700"></div>
+  <div><label class="block text-sm mb-1">Role</label>
+    <select name="role" class="w-full px-3 py-2 rounded bg-slate-800 border border-slate-700">
+      <option value="user" {% if user.role=='user' %}selected{% endif %}>User</option>
+      <option value="admin" {% if user.role=='admin' %}selected{% endif %}>Admin</option>
+    </select>
+  </div>
+  <div class="flex items-center gap-2">
+    <input type="checkbox" id="activeCheck" name="active" value="1" class="h-4 w-4" {% if user.active %}checked{% endif %}>
+    <label for="activeCheck">Active</label>
+  </div>
+  <div class="flex gap-2">
+    <button class="px-4 py-2 rounded bg-brand text-white">Save</button>
+    <a href="{{ url_for('admin_bp.admin_manage_users') }}" class="px-4 py-2 rounded border border-slate-700 hover:bg-slate-800">Cancel</a>
+  </div>
+</form>
+{% endblock %}
+</html>

@@ -1,0 +1,55 @@
+{% extends "admin_tw_base.html" %}
+{% block title %}Admin · Users{% endblock %}
+{% block content %}
+<h2 class="text-xl font-semibold mb-4">Manage users</h2>
+
+<form class="grid md:grid-cols-6 gap-3 mb-4" method="GET" action="{{ url_for('admin_bp.admin_manage_users') }}">
+  <input type="text" name="q" value="{{ q or '' }}" placeholder="Name, username or email" class="md:col-span-2 px-3 py-2 rounded bg-slate-800 border border-slate-700 w-full">
+  <select name="role" class="px-3 py-2 rounded bg-slate-800 border border-slate-700">
+    <option value="">All roles</option>
+    <option value="user" {% if role=='user' %}selected{% endif %}>User</option>
+    <option value="admin" {% if role=='admin' %}selected{% endif %}>Admin</option>
+  </select>
+  <select name="active" class="px-3 py-2 rounded bg-slate-800 border border-slate-700">
+    <option value="">Active: Any</option>
+    <option value="1" {% if active=='1' %}selected{% endif %}>Active</option>
+    <option value="0" {% if active=='0' %}selected{% endif %}>Inactive</option>
+  </select>
+  <select name="per_page" class="px-3 py-2 rounded bg-slate-800 border border-slate-700">
+    {% for p in [10,20,50,100] %}<option value="{{ p }}" {% if per_page==p %}selected{% endif %}>{{ p }}</option>{% endfor %}
+  </select>
+  <button class="px-3 py-2 rounded bg-brand text-white">Filter</button>
+</form>
+
+<div class="overflow-hidden rounded-xl border border-slate-700">
+  <table class="w-full text-sm">
+    <thead class="bg-slate-800/70 text-slate-300">
+      <tr><th class="text-left p-3">ID</th><th class="text-left p-3">Name</th><th class="text-left p-3">Username</th><th class="text-left p-3">Email</th><th class="text-left p-3">Role</th><th class="text-left p-3">Active</th><th class="text-left p-3">Actions</th></tr>
+    </thead>
+    <tbody class="divide-y divide-slate-700">
+      {% for u in users %}
+      <tr class="hover:bg-slate-800/40">
+        <td class="p-3">{{ u.id }}</td><td class="p-3">{{ u.name }}</td><td class="p-3">{{ u.username }}</td><td class="p-3">{{ u.email }}</td>
+        <td class="p-3"><span class="px-2 py-0.5 rounded text-xs {{ 'bg-sky-600' if u.role=='admin' else 'bg-slate-600' }}">{{ u.role }}</span></td>
+        <td class="p-3">{{ 'Yes' if u.active==1 else 'No' }}</td>
+        <td class="p-3">
+          <a href="{{ url_for('admin_bp.admin_edit_user', user_id=u.id) }}" class="px-2 py-1 rounded bg-sky-600 hover:bg-sky-500 text-white">Edit</a>
+          <form action="{{ url_for('admin_bp.admin_delete_user', user_id=u.id) }}" method="POST" class="inline">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="px-2 py-1 rounded bg-rose-600 hover:bg-rose-500 text-white" data-confirm="Delete this user?">Delete</button>
+          </form>
+        </td>
+      </tr>
+      {% else %}
+      <tr><td class="p-4 text-slate-400" colspan="7">No users found.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<nav class="mt-4 flex items-center gap-2">
+  <a class="px-3 py-1.5 rounded border border-slate-700 hover:bg-slate-800 {{ 'pointer-events-none opacity-50' if page<=1 }}" href="{{ url_for('admin_bp.admin_manage_users', q=q, role=role, active=active, per_page=per_page, page=page-1) }}">Prev</a>
+  <span class="text-slate-300">Page {{ page }} / {{ pages }}</span>
+  <a class="px-3 py-1.5 rounded border border-slate-700 hover:bg-slate-800 {{ 'pointer-events-none opacity-50' if page>=pages }}" href="{{ url_for('admin_bp.admin_manage_users', q=q, role=role, active=active, per_page=per_page, page=page+1) }}">Next</a>
+</nav>
+{% endblock %}
